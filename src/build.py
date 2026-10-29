@@ -46,8 +46,14 @@ HASHED = {
 for a, b in HASHED.items():
     raw = raw.replace(a, b)
 
+# --- 2b. Point the social-preview image (og:image / twitter:image) at a local asset
+#         instead of the original project's remote upload. ---
+raw = raw.replace(
+    'https://storage.googleapis.com/gpt-engineer-file-uploads/p258ALT5WGc0WCe3ETF9MArESbx1/social-images/social-1784056272518-IMG_1626.webp',
+    '/assets/monogram.jpg')
+
 # --- 3. Strip framework / analytics scripts & preloads ---
-# lovable analytics + events scripts
+# injected analytics + events scripts
 raw = re.sub(r'<script defer src="/~flock\.js"[^>]*></script>', '', raw)
 raw = re.sub(r'<script defer src="/__l5e/events[^>]*></script>', '', raw)
 # modulepreloads for the React bundle

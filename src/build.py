@@ -280,6 +280,71 @@ INJECT = r'''
     window.addEventListener('resize', function () { if (!cleared) paintCover(); });
   }
 
+  /* ---------- 3b. Couple photo carousel ---------- */
+  var coupleImg = document.querySelector('img[src*="couple-dance"]');
+  if (coupleImg) {
+    var frame = coupleImg.parentElement;              // the aspect-[4/5] framed box
+    var ringEl = frame.querySelector('.ring-inset');  // keep the gold inner ring
+    var slides = [
+      '/story/couple-dance.jpg',
+      '/story/couple-1.jpg',
+      '/story/couple-2.jpg',
+      '/story/couple-3.jpg',
+      '/story/couple-4.jpg',
+      '/story/couple-5.jpg'
+    ];
+    frame.innerHTML = '';
+    var imgEls = slides.map(function (src, i) {
+      var im = document.createElement('img');
+      im.src = src;
+      im.alt = 'Roopa and Mohan';
+      im.loading = i === 0 ? 'eager' : 'lazy';
+      im.draggable = false;
+      im.className = 'absolute inset-0 w-full h-full object-cover';
+      im.style.cssText = 'transition:opacity 900ms ease; opacity:' + (i === 0 ? '1' : '0');
+      frame.appendChild(im);
+      return im;
+    });
+    if (ringEl) frame.appendChild(ringEl);
+
+    // dots
+    var dots = document.createElement('div');
+    dots.style.cssText = 'position:absolute;bottom:12px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:8px;z-index:10';
+    var dotEls = slides.map(function (_, i) {
+      var d = document.createElement('button');
+      d.setAttribute('aria-label', 'Go to photo ' + (i + 1));
+      d.style.cssText = 'width:7px;height:7px;border-radius:9999px;padding:0;cursor:pointer;transition:background 300ms ease;border:1px solid rgba(255,255,255,0.9);box-shadow:0 1px 3px rgba(0,0,0,0.45);background:' + (i === 0 ? '#fff' : 'rgba(255,255,255,0.4)');
+      d.addEventListener('click', function () { go(i, true); });
+      dots.appendChild(d);
+      return d;
+    });
+    frame.appendChild(dots);
+
+    var cur = 0, timer = null;
+    function render() {
+      imgEls.forEach(function (im, i) { im.style.opacity = i === cur ? '1' : '0'; });
+      dotEls.forEach(function (d, i) { d.style.background = i === cur ? '#fff' : 'rgba(255,255,255,0.4)'; });
+    }
+    function go(i, manual) {
+      cur = (i + slides.length) % slides.length;
+      render();
+      if (manual) restart();
+    }
+    function next() { go(cur + 1); }
+    function restart() { if (timer) clearInterval(timer); timer = setInterval(next, 4000); }
+    restart();
+
+    // swipe (touch) + basic drag
+    var sx = null;
+    frame.addEventListener('touchstart', function (e) { sx = e.touches[0].clientX; }, { passive: true });
+    frame.addEventListener('touchend', function (e) {
+      if (sx === null) return;
+      var dx = e.changedTouches[0].clientX - sx;
+      if (Math.abs(dx) > 40) go(cur + (dx < 0 ? 1 : -1), true);
+      sx = null;
+    }, { passive: true });
+  }
+
   /* ---------- 4. Scroll-reveal for story / event / venue sections ---------- */
   var reveals = [];
   document.querySelectorAll('section').forEach(function (sec, idx) {
